@@ -272,8 +272,6 @@ function findValueInJson(json, paths) {
 			try {
 				if ( eval(jsonPath) ) {
 					value = eval(jsonPath);
-					//log.info(jsonPath);
-					//log.info(value);
 					if (typeof value === "string") {
 						if (value.trim() === "")
 							value = null; // Reset value if empty string (skip empties)

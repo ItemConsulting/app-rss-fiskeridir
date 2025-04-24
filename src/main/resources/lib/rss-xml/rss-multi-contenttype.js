@@ -146,11 +146,6 @@ function queryContent(site, content){
     return map.contenttype
   })
 
-  log.info('searchDate %s', JSON.stringify(searchDate, null, 2))
-  log.info('queryString %s', JSON.stringify(queryString, null, 2))
-
-  log.info('contentTypes, %s', JSON.stringify(contentTypes, null, 2))
-  // Fetch our feed items!
   return contentLib.query({
     start: 0,
     count: content.data.counter || DEFAULT_FEED_COUNT,
