@@ -3,6 +3,7 @@ const contentLib =  require('/lib/xp/content');
 const portalLib = require('/lib/xp/portal');
 const util = require('/lib/util');
 const authLib = require('/lib/xp/auth');
+const moment = require("/lib/moment-timezone");
 const arrays = require('/lib/arrays');
 const json = require('/lib/json');
 const string = require('/lib/string');
@@ -15,17 +16,6 @@ exports.getParamsFromMultiContentType = function(site, content){
   if (content.type != app.name + ":rss-page-multi-content") {
     return {}
   }
-
-  const rssFeed = {
-    title: content.displayName,
-    description: site.data.description,
-    counter: content.data.counter || DEFAULT_FEED_COUNT,
-    language: content.data.language || DEFAULT_FEED_LANG,
-    url: portalLib.pageUrl({
-      path: content._path,
-      type: 'absolute'
-    })
-  };
 
   const contentTypeMappings = content.data.mappings.reduce((acc, mapping) => {
     acc[mapping.contenttype] = {
@@ -47,6 +37,24 @@ exports.getParamsFromMultiContentType = function(site, content){
     return getSimpleRssItem(contentTypeMappings[hit.type], hit)
   })
 
+  const lastBuild = new Date(Math.max.apply(null, simpleRssContent.map((rssContent) => {
+    return new Date(rssContent.publishDate);
+  })));
+
+  const rssFeed = {
+    title: content.displayName,
+    description: site.data.description,
+    lastBuild: simpleRssContent.length > 0
+      ? lastBuild
+      : moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
+    counter: content.data.counter || DEFAULT_FEED_COUNT,
+    language: content.data.language || DEFAULT_FEED_LANG,
+    url: portalLib.pageUrl({
+      path: content._path,
+      type: 'absolute'
+    })
+  };
+
   return {
     feed: rssFeed,
     items: simpleRssContent,
@@ -60,15 +68,45 @@ function getSimpleRssItem(settings, content){
   const rawCategories = json.findValueInJson(content, settings.categories)
   const categories = getCategories(util.data.forceArray(rawCategories))
   const rawSummary = json.findValueInJson(content, settings.summary)
+  const properDate = content.publish.from ? content.publish.from : content.createdTime;
+  const thumbnailId = json.findValueInJson(content, settings.thumbnail)
+  const thumbnail = thumbnailId ? getThumbnail(thumbnailId) : undefined
+
   return {
     title: json.findValueInJson(content, settings.title),
     summary: rawSummary ? string.removeTags(rawSummary + '') : "",
     date: json.findValueInJson(content, settings.date),
     body: json.findValueInJson(content, settings.body),
     authorName,
-    thumbnailId: json.findValueInJson(content, settings.thumbnail),
+    thumbnail,
     categories,
+    link: portalLib.pageUrl({
+      path: content._path,
+      type: 'absolute'
+    }),
+    modifiedTime: content.modifiedTime,
+    publishDate: moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
   };
+}
+
+function getThumbnail(thumbnailId, settings){
+  const thumbnailContent = contentLib.get({
+    key: thumbnailId
+  });
+
+  if (thumbnailContent) {
+    const thumbnailAttachment = thumbnailContent.attachments[thumbnailContent.data.media.attachment];
+
+    return {
+      type: thumbnailAttachment.mimeType,
+      size: thumbnailAttachment.size,
+      url: portalLib.imageUrl({
+        id: thumbnailId,
+        scale: settings.thumbnailScale,
+        type: "absolute"
+      })
+    };
+  }
 }
 
 function getContentAuthorName(author){
