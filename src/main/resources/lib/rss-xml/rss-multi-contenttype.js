@@ -10,6 +10,7 @@ const string = require('/lib/string');
 
 const DEFAULT_FEED_COUNT = 20;
 const DEFAULT_FEED_LANG = 'no-NO';
+const DEFAULT_FEED_TIMEZONE = "Etc/UCT"
 
 exports.getParamsFromMultiContentType = function(site, content){
 
@@ -26,7 +27,7 @@ exports.getParamsFromMultiContentType = function(site, content){
       date: arrays.commaStringToArray(mapping.mapDate) || ['publish.from', 'data.publishDate', 'createdTime'],
       body: arrays.commaStringToArray(mapping.mapBody) || ['data.body', 'data.html', 'data.text'],
       categories: arrays.commaStringToArray(mapping.mapCategories) || ['data.category', 'data.categories', 'data.tags'],
-      timeZone: mapping.timezone || "Etc/UCT",
+      timeZone: mapping.timezone || DEFAULT_FEED_TIMEZONE,
       thumbnailScale: mapping.mapThumbnailScale || "block(480,270)"
     }
     return acc
@@ -46,7 +47,7 @@ exports.getParamsFromMultiContentType = function(site, content){
     description: site.data.description,
     lastBuild: simpleRssContent.length > 0
       ? lastBuild
-      : moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
+      : moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(DEFAULT_FEED_TIMEZONE).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
     counter: content.data.counter || DEFAULT_FEED_COUNT,
     language: content.data.language || DEFAULT_FEED_LANG,
     url: portalLib.pageUrl({
@@ -70,7 +71,7 @@ function getSimpleRssItem(settings, content){
   const rawSummary = json.findValueInJson(content, settings.summary)
   const properDate = content.publish.from ? content.publish.from : content.createdTime;
   const thumbnailId = json.findValueInJson(content, settings.thumbnail)
-  const thumbnail = thumbnailId ? getThumbnail(thumbnailId) : undefined
+  const thumbnail = thumbnailId ? getThumbnail(thumbnailId, settings) : undefined
 
   return {
     title: json.findValueInJson(content, settings.title),
@@ -183,6 +184,15 @@ function queryContent(site, content){
   const contentTypes = util.data.forceArray(content.data.mappings).map((map) => {
     return map.contenttype
   })
+  const theQuery = {
+    start: 0,
+    count: content.data.counter || DEFAULT_FEED_COUNT,
+    query: queryString,
+    sort: searchDate + ' DESC, createdTime DESC',
+    contentTypes
+  }
+
+  log.info('theQuery %s', JSON.stringify(theQuery, null, 2))
 
   return contentLib.query({
     start: 0,
