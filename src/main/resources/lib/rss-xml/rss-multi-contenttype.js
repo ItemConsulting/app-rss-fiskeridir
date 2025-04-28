@@ -184,6 +184,7 @@ function queryContent(site, content){
   const contentTypes = util.data.forceArray(content.data.mappings).map((map) => {
     return map.contenttype
   })
+
   const theQuery = {
     start: 0,
     count: content.data.counter || DEFAULT_FEED_COUNT,
@@ -192,13 +193,5 @@ function queryContent(site, content){
     contentTypes
   }
 
-  log.info('theQuery %s', JSON.stringify(theQuery, null, 2))
-
-  return contentLib.query({
-    start: 0,
-    count: content.data.counter || DEFAULT_FEED_COUNT,
-    query: queryString,
-    sort: searchDate + ' DESC, createdTime DESC',
-    contentTypes
-  });
+  return contentLib.query(theQuery);
 }
