@@ -108,6 +108,9 @@ function getParams(site, content) {
 	var lastBuild = new Date(Math.max.apply(null, posts.map(function(e) {
 		return new Date(posts.modifiedTime);
 	})));
+
+	log.info('lastBuild %s', lastBuild)
+
 	rssFeed.lastBuild = feedItems.length > 0 ? lastBuild : libs.moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ");
 
 	for (var i = 0; i < postsLength; i++) {
