@@ -43,8 +43,6 @@ exports.getParamsFromMultiContentType = function(site, content){
     return new Date(rssContent.publishDate);
   })));
 
-  log.info('lastBuild %s', lastBuild)
-
   const rssFeed = {
     title: content.displayName,
     description: site.data.description,
@@ -73,6 +71,7 @@ function getSimpleRssItem(settings, content){
   const categories = getCategories(util.data.forceArray(rawCategories))
   const rawSummary = json.findValueInJson(content, settings.summary)
   const properDate = content.publish.from ? content.publish.from : content.createdTime;
+  const publishDate = moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ")
   const thumbnailId = json.findValueInJson(content, settings.thumbnail)
   const thumbnail = thumbnailId ? getThumbnail(thumbnailId, settings) : undefined
 
@@ -89,7 +88,7 @@ function getSimpleRssItem(settings, content){
       type: 'absolute'
     }),
     modifiedTime: content.modifiedTime,
-    publishDate: moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
+    publishDate
   };
 }
 

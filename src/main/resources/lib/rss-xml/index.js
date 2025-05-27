@@ -146,6 +146,7 @@ function getParams(site, content) {
 		feedItem.categories = [];
 		var tmpCategories = libs.util.data.forceArray(itemData.categories);
 
+
 		if (JSON.stringify(tmpCategories) != "[null]") {
 			tmpCategories.forEach( function(category) {
 				if (typeof category === "string") {
