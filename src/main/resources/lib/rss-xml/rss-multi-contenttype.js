@@ -10,7 +10,8 @@ const string = require('/lib/string');
 
 const DEFAULT_FEED_COUNT = 20;
 const DEFAULT_FEED_LANG = 'no-NO';
-const DEFAULT_FEED_TIMEZONE = "Etc/UCT"
+const DEFAULT_FEED_TIMEZONE = "Etc/UCT";
+const DEFAULT_THUMBNAIL_SCALE = "block(480,270)";
 
 exports.getParamsFromMultiContentType = function(site, content){
 
@@ -28,7 +29,7 @@ exports.getParamsFromMultiContentType = function(site, content){
       body: arrays.commaStringToArray(mapping.mapBody) || ['data.body', 'data.html', 'data.text'],
       categories: arrays.commaStringToArray(mapping.mapCategories) || ['data.category', 'data.categories', 'data.tags'],
       timeZone: mapping.timezone || DEFAULT_FEED_TIMEZONE,
-      thumbnailScale: mapping.mapThumbnailScale || "block(480,270)"
+      thumbnailScale: mapping.mapThumbnailScale || DEFAULT_THUMBNAIL_SCALE
     }
     return acc
   },{})
@@ -70,6 +71,7 @@ function getSimpleRssItem(settings, content){
   const categories = getCategories(util.data.forceArray(rawCategories))
   const rawSummary = json.findValueInJson(content, settings.summary)
   const properDate = content.publish.from ? content.publish.from : content.createdTime;
+  const publishDate = moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ")
   const thumbnailId = json.findValueInJson(content, settings.thumbnail)
   const thumbnail = thumbnailId ? getThumbnail(thumbnailId, settings) : undefined
 
@@ -86,7 +88,7 @@ function getSimpleRssItem(settings, content){
       type: 'absolute'
     }),
     modifiedTime: content.modifiedTime,
-    publishDate: moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
+    publishDate
   };
 }
 
@@ -177,6 +179,20 @@ function queryContent(site, content){
       queryString += ' AND data.types = "' + tags[i] + '"'
     }
   }
+
+  // Filter on status
+  if(content.data.status){
+    const status = util.data.forceArray(content.data.status);
+
+    let tmp = [];
+    for(let i = 0; i< status.length; i++){
+      tmp.push('data.status = "' + status[i] + '"');
+    }
+    if(tmp.length){
+      queryString += ' AND (' + tmp.join(" OR ")+ ')'
+    }
+  }
+
   // Sort by the date field the app is set up to use
   let searchDate = content.data.mapDate || 'publish.from';
   searchDate = searchDate.replace("[", ".["); // Add dot since we will remove special characters later

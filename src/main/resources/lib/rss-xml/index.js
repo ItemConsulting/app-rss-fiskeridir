@@ -108,6 +108,7 @@ function getParams(site, content) {
 	var lastBuild = new Date(Math.max.apply(null, posts.map(function(e) {
 		return new Date(posts.modifiedTime);
 	})));
+
 	rssFeed.lastBuild = feedItems.length > 0 ? lastBuild : libs.moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ");
 
 	for (var i = 0; i < postsLength; i++) {
@@ -144,6 +145,7 @@ function getParams(site, content) {
 		// Category handling
 		feedItem.categories = [];
 		var tmpCategories = libs.util.data.forceArray(itemData.categories);
+
 
 		if (JSON.stringify(tmpCategories) != "[null]") {
 			tmpCategories.forEach( function(category) {
