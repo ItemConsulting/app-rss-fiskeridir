@@ -23,7 +23,6 @@ function renderXmlOnly(site, content) {
 
 function renderMultiContentType(site, content){
 	const params = libs.rssMulti.getParamsFromMultiContentType(site, content);
-
 	return !isParamsValid(params) ? renderInvalidContentWarning() : renderXml(params);
 }
 
@@ -105,11 +104,11 @@ function getParams(site, content) {
 	var feedItems = [];
 
 	// Set last build for the feed equal to the top article result or the rss-page modifiedDate
-	var lastBuild = new Date(Math.max.apply(null, posts.map(function(e) {
-		return new Date(posts.modifiedTime);
+	var lastBuild = new Date(Math.max.apply(null, posts.map((p) => {
+		return new Date(p.modifiedTime);
 	})));
 
-	rssFeed.lastBuild = feedItems.length > 0 ? lastBuild : libs.moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ");
+	rssFeed.lastBuild = result.hits.length > 0 ? lastBuild : libs.moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ");
 
 	for (var i = 0; i < postsLength; i++) {
 
@@ -215,7 +214,6 @@ function getParams(site, content) {
 module.exports = { render, renderXmlOnly, renderMultiContentType };
 
 // Helper functions
-
 function isParamsValid(params) {
 	return params.feed && params.items;
 }
@@ -238,7 +236,6 @@ function renderEmptyXml() {
 
 function renderXml(params) {
 	var body = "";
-
 	try {
 		body = libs.xslt.render(resolve('rss.xsl'), params);
 	} catch (e) {
