@@ -47,9 +47,10 @@ exports.getParamsFromMultiContentType = function(site, content){
   const rssFeed = {
     title: content.displayName,
     description: site.data.description,
-    lastBuild: simpleRssContent.length > 0
-      ? lastBuild
-      : moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(DEFAULT_FEED_TIMEZONE).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
+    lastBuild: moment(
+      simpleRssContent.length > 0 ? lastBuild : content.modifiedTime,
+      'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]'
+    ).tz(DEFAULT_FEED_TIMEZONE).format("ddd, DD MMM YYYY HH:mm:ss ZZ"),
     counter: content.data.counter || DEFAULT_FEED_COUNT,
     language: content.data.language || DEFAULT_FEED_LANG,
     url: portalLib.pageUrl({
@@ -71,7 +72,7 @@ function getSimpleRssItem(settings, content){
   const rawCategories = json.findValueInJson(content, settings.categories)
   const categories = getCategories(util.data.forceArray(rawCategories))
   const rawSummary = json.findValueInJson(content, settings.summary)
-  const properDate = content.publish.from ? content.publish.from : content.createdTime;
+  const properDate = (content.publish && content.publish.from) ? content.publish.from : content.createdTime;
   const publishDate = moment(properDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ")
   const thumbnailId = json.findValueInJson(content, settings.thumbnail)
   const thumbnail = thumbnailId ? getThumbnail(thumbnailId, settings) : undefined
@@ -147,7 +148,7 @@ function getCategories(categories){
         return category
       }
     }
-  });
+  }).filter(Boolean);
 }
 
 function queryContent(site, content){

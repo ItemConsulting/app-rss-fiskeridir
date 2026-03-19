@@ -1,19 +1,24 @@
+function getNestedValue(obj, path) {
+  return path.split('.').reduce(function(current, key) {
+    return current != null ? current[key] : undefined;
+  }, obj);
+}
+
 exports.findValueInJson = function(json, paths) {
 
   const res = paths.reduce((acc, cur) => {
     const jpBits = cur.split(',').filter((bit) => bit !== "" && bit !== undefined)
     const valuesFromJson = jpBits.map((bit) => {
       const sanitizedBit = bit.trim()
-      const jsonBit = `json.${sanitizedBit}`;
-      if(eval(jsonBit)){
-        const value = eval(jsonBit);
+      const value = getNestedValue(json, sanitizedBit);
+      if(value){
         if (typeof value === "string") {
           return value
         } else if(Array.isArray(value)){
           return value.join(" ");
         }
       }
-    }).filter((bit) => bit !== "" && bit !== null && bit !== "null")
+    }).filter((bit) => bit !== "" && bit !== null && bit !== "null" && bit !== undefined)
 
     if(valuesFromJson.length > 0) {
       const ccc = valuesFromJson.join(" ")
