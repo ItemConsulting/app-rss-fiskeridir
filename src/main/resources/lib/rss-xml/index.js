@@ -99,6 +99,7 @@ function getParams(site, content) {
 			content.data.contenttype
 		]
 	});
+
 	var posts = result.hits;
 	var postsLength = posts.length;
 	var feedItems = [];
@@ -108,7 +109,10 @@ function getParams(site, content) {
 		return new Date(p.modifiedTime);
 	})));
 
-	rssFeed.lastBuild = result.hits.length > 0 ? lastBuild : libs.moment(content.modifiedTime, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]').tz(settings.timeZone).format("ddd, DD MMM YYYY HH:mm:ss ZZ");
+	var lastBuildDate = postsLength > 0 ? lastBuild : content.modifiedTime;
+	rssFeed.lastBuild = libs.moment(lastBuildDate, 'YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]')
+		.tz(settings.timeZone)
+		.format("ddd, DD MMM YYYY HH:mm:ss ZZ");
 
 	for (var i = 0; i < postsLength; i++) {
 
@@ -254,28 +258,31 @@ function commaStringToArray(str) {
 	var arr = commas.split(',');
 	arr = libs.util.data.forceArray(str); // Make sure we always work with an array
 	if (arr) {
-		arr.map(function(s) { return s.trim() });
+		return arr.map(function(s) { return s.trim() });
 	}
-	//libs.util.log(arr);
 	return arr;
+}
+
+function getNestedValue(obj, path) {
+	return path.split('.').reduce(function(current, key) {
+		return current != null ? current[key] : undefined;
+	}, obj);
 }
 
 function findValueInJson(json, paths) {
 	var value = null;
 	var pathLength = paths.length;
-	var jsonPath = "";
 
 	for (var i = 0; i < pathLength; i++) {
 		if ( paths[i] ) {
-			jsonPath = 'json.' + paths[i] + '';
 			try {
-				if ( eval(jsonPath) ) {
-					value = eval(jsonPath);
+				value = getNestedValue(json, paths[i]);
+				if ( value ) {
 					if (typeof value === "string") {
 						if (value.trim() === "")
-							value = null; // Reset value if empty string (skip empties)
+							value = null;
 						else
-							return value; // Expect the first property in the string is the most important one to use
+							return value;
 					} else if(Array.isArray(value)){
 						return value;
 					} else {
